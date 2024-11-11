@@ -1,0 +1,17 @@
+﻿
+@{
+    ViewData["Title"] = "OlvidoContraseña";
+}
+<h2>Olvidé mi Contraseña</h2>
+<form asp-action="OlvidoContraseña" method="post">
+    <div>
+        <label>Correo:</label>
+        <input type="text" name="correo" required />
+    </div>
+    <button type="submit">Restablecer Contraseña</button>
+</form>
+
+@if (ViewBag.Mensaje != null)
+{
+    <p>@ViewBag.Mensaje</p>
+}
