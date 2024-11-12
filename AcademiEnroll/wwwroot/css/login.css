@@ -4,3 +4,13 @@
     background-position: center;
     background-repeat: no-repeat;
 }
+
+.acrylic-card {
+    background: transparent; /* Fondo blanco semitransparente */
+    backdrop-filter: blur(10px); /* Desenfoque para el efecto vidrio */
+    -webkit-backdrop-filter: blur(10px); /* Soporte para Safari */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Borde suave para el efecto acrílico */
+    color: transparent;
+}
+
+

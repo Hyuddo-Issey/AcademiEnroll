@@ -3,6 +3,10 @@ using AcademiEnroll.Models;
 using AcademiEnroll.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 public class CuentaController : Controller
 {
@@ -15,7 +19,7 @@ public class CuentaController : Controller
     }
 
     // Creacion de la vista principal de Login
-    public IActionResult Login() => View();
+    public IActionResult Login() => View();    
 
     // Creacion de la logica para procesar el Login
     [HttpPost]
@@ -24,6 +28,17 @@ public class CuentaController : Controller
         var usuario = _context.Usuarios.SingleOrDefault(u => u.Correo == correo && u.Clave == clave);
         if (usuario != null)
         {
+            var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, usuario.Nombre),
+            new Claim("Rol", usuario.Rol)  // Guarda el rol en una claim
+        };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties();
+
+            HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+
             if (usuario.Rol == "Administrador") return RedirectToAction("VistaAdmin");
             if (usuario.Rol == "Docente") return RedirectToAction("VistaDocente");
             return RedirectToAction("VistaEstudiante");
@@ -31,9 +46,20 @@ public class CuentaController : Controller
         ModelState.AddModelError("", "Usuario o contraseña incorrectos.");
         return View();
     }
+    
+    // Creacion de  la vista de Registro    
+    public IActionResult Registro()
+    {
+        var rol = User.FindFirst("Rol")?.Value;
+        if (rol != "Administrador")
+        {
+            return RedirectToAction("Login");
+        }
 
-    // Creacion de  la vista de Registro
-    public IActionResult Registro() => View();
+        return View();
+    }
+
+
 
     // Creacion de la logica que Procesa el registro de un nuevo usuario
     [HttpPost]
@@ -52,6 +78,7 @@ public class CuentaController : Controller
         }
 
         ModelState.AddModelError("", "Error al registrar el usuario.");
+
         return View();
     }
 
