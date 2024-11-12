@@ -4,9 +4,10 @@ using AcademiEnroll.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 public class CuentaController : Controller
 {
@@ -25,28 +26,39 @@ public class CuentaController : Controller
     [HttpPost]
     public IActionResult Login(string correo, string clave)
     {
+        // Buscar el usuario por correo y contraseña
         var usuario = _context.Usuarios.SingleOrDefault(u => u.Correo == correo && u.Clave == clave);
+
         if (usuario != null)
         {
+            // Crear las claims del usuario
             var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, usuario.Nombre),
-            new Claim("Rol", usuario.Rol)  // Guarda el rol en una claim
+            new Claim("Rol", usuario.Rol)  // Guardar el rol en una claim personalizada
         };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var authProperties = new AuthenticationProperties();
 
-            HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+            // Autenticar al usuario y crear la cookie de autenticación
+            HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties
+            );
 
+            // Redirigir según el rol del usuario
             if (usuario.Rol == "Administrador") return RedirectToAction("VistaAdmin");
             if (usuario.Rol == "Docente") return RedirectToAction("VistaDocente");
             return RedirectToAction("VistaEstudiante");
         }
-        ModelState.AddModelError("", "Usuario o contraseña incorrectos.");
+
+        // Enviar un mensaje de error si las credenciales son incorrectas
+        ViewData["LoginError"] = "Credenciales incorrectas. Por favor, intente de nuevo.";
         return View();
     }
-    
+
     // Creacion de  la vista de Registro    
     public IActionResult Registro()
     {
